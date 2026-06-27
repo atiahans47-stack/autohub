@@ -77,7 +77,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: messageData, error } = await (supabase.from('chat_messages') as any)
+    const supabaseAdmin = getSupabaseAdmin();
+
+    const { data: messageData, error } = await (supabaseAdmin.from('chat_messages') as any)
       .insert({
         room_id,
         sender_id,
@@ -91,7 +93,7 @@ export async function POST(request: NextRequest) {
     if (error) throw error;
 
     // Update room updated_at timestamp
-    await (supabase.from('chat_rooms') as any)
+    await (supabaseAdmin.from('chat_rooms') as any)
       .update({ updated_at: new Date().toISOString() })
       .eq('id', room_id);
 
