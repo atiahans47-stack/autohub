@@ -1,0 +1,143 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Users table (extends Supabase auth.users)
+model User {
+  id              String   @id @default(uuid()) @db.Uuid
+  email           String   @unique
+  name            String
+  phone           String?
+  role            String   @default("customer") @db.VarChar(20)
+  status          String   @default("Active") @db.VarChar(20)
+  totalBookings   Int      @default(0) @map("total_bookings")
+  totalPurchases  Int      @default(0) @map("total_purchases")
+  joinedDate      DateTime @default(now()) @map("joined_date") @db.Timestamptz
+  lastActive      DateTime @default(now()) @map("last_active") @db.Timestamptz
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  bookings        Booking[]
+  sales           Sale[]
+  messages        Message[]
+  reviews         Review[]
+
+  @@map("users")
+}
+
+// Cars table
+model Car {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String
+  image         String?
+  type          String    @db.VarChar(20)
+  price         Decimal   @db.Decimal(10, 2)
+  transmission  String?   @db.VarChar(20)
+  fuelType      String?   @map("fuel_type") @db.VarChar(20)
+  seats         Int?
+  availability  String    @default("Available") @map("availability") @db.VarChar(20)
+  location      String?
+  mileage       Int?
+  year          Int?
+  color         String?
+  description   String?
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  bookings      Booking[]
+  sales         Sale[]
+  reviews       Review[]
+
+  @@map("cars")
+}
+
+// Bookings table
+model Booking {
+  id              String    @id @default(uuid()) @db.Uuid
+  customerId      String    @map("customer_id") @db.Uuid
+  carId           String    @map("car_id") @db.Uuid
+  customerName    String    @map("customer_name")
+  customerEmail   String    @map("customer_email")
+  customerPhone   String?   @map("customer_phone")
+  carName         String    @map("car_name")
+  startDate       DateTime  @map("start_date") @db.Date
+  endDate         DateTime  @map("end_date") @db.Date
+  location        String?
+  amount          Decimal   @db.Decimal(10, 2)
+  status          String    @default("Pending") @db.VarChar(20)
+  paymentStatus   String    @default("Pending") @map("payment_status") @db.VarChar(20)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  customer        User      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  car             Car       @relation(fields: [carId], references: [id], onDelete: Cascade)
+
+  @@map("bookings")
+}
+
+// Sales table
+model Sale {
+  id              String    @id @default(uuid()) @db.Uuid
+  customerId      String    @map("customer_id") @db.Uuid
+  carId           String    @map("car_id") @db.Uuid
+  customerName    String    @map("customer_name")
+  customerEmail   String    @map("customer_email")
+  customerPhone   String?   @map("customer_phone")
+  carName         String    @map("car_name")
+  amount          Decimal   @db.Decimal(10, 2)
+  status          String    @default("Pending") @db.VarChar(20)
+  paymentStatus   String    @default("Pending") @map("payment_status") @db.VarChar(20)
+  paymentMethod   String?   @map("payment_method")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  customer        User      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  car             Car       @relation(fields: [carId], references: [id], onDelete: Cascade)
+
+  @@map("sales")
+}
+
+// Messages table
+model Message {
+  id              String    @id @default(uuid()) @db.Uuid
+  conversationId  String    @map("conversation_id")
+  senderId        String    @map("sender_id") @db.Uuid
+  senderName      String    @map("sender_name")
+  senderEmail     String?   @map("sender_email")
+  senderPhone     String?   @map("sender_phone")
+  text            String
+  status          String    @default("sent") @db.VarChar(20)
+  isAdmin         Boolean   @default(false) @map("is_admin")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  sender          User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+// Reviews table
+model Review {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  userName    String    @map("user_name")
+  userEmail   String?   @map("user_email")
+  carId       String    @map("car_id") @db.Uuid
+  carName     String?   @map("car_name")
+  rating      Int
+  comment     String?
+  status      String    @default("Pending") @db.VarChar(20)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  car         Car       @relation(fields: [carId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
