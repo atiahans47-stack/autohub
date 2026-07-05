@@ -49,8 +49,8 @@ A comprehensive car rental and sales platform built with Next.js, featuring user
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
-cd Online-car-rentals
+git clone https://github.com/atiahans47-stack/autohub.git
+cd autohub
 ```
 
 ### 2. Install dependencies
