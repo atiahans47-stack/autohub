@@ -4,14 +4,14 @@ import { getAuthUserFromRequest, isAdminUser } from '@/lib/auth';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getAuthUserFromRequest(request);
     if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
     if (!isAdminUser(user)) return NextResponse.json({ error: 'Forbidden.' }, { status: 403 });
 
-    const bookingId = params.id;
+    const { id: bookingId } = await params;
     const supabaseAdmin = getSupabaseAdmin();
 
     // Get booking details
