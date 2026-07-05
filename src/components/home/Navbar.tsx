@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Menu, X, Car, LogOut } from 'lucide-react';
+import { Menu, X, Car, LogOut, ChevronDown } from 'lucide-react';
 import { Suspense } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useChatInit } from '@/hooks/useChatInit';
@@ -11,8 +11,27 @@ import { useChatInit } from '@/hooks/useChatInit';
 function NavbarContent() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string>('');
+  const [siteName, setSiteName] = useState<string>('AUTOHub');
   const { user, logout, loading } = useAuth();
   useChatInit(user);
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const response = await fetch('/api/content/settings');
+        const data = await response.json();
+        if (data.content) {
+          setLogoUrl(data.content.logo || '');
+          setSiteName(data.content.siteName || 'AUTOHub');
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    }
+    loadSettings();
+  }, []);
 
   const navLinks = [
     { name: 'Home', href: '/' },
@@ -32,8 +51,18 @@ function NavbarContent() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <Car className="h-8 w-8 text-blue-600" />
-            <span className="text-xl font-bold text-gray-900">AUTOHub</span>
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={siteName}
+                className="h-10 w-auto object-contain"
+              />
+            ) : (
+              <Car className="h-8 w-8 text-blue-600" />
+            )}
+            {!logoUrl && (
+              <span className="text-xl font-bold text-gray-900">{siteName}</span>
+            )}
           </div>
 
           {/* Desktop Navigation */}
@@ -58,21 +87,37 @@ function NavbarContent() {
             {loading ? (
               <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             ) : user ? (
-              <div className="flex items-center gap-3">
-                <a
-                  href="/dashboard/profile"
-                  className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
-                >
-                  Dashboard
-                </a>
-                <span className="text-sm font-medium text-gray-700">{user.full_name}</span>
+              <div className="relative">
                 <button
-                  onClick={logout}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
                 >
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
+                  <span>{user.full_name}</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <a
+                      href="/dashboard/profile"
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      <span>Profile</span>
+                    </a>
+                    <a
+                      href="/dashboard/bookings"
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      <span>My Bookings</span>
+                    </a>
+                    <button
+                      onClick={logout}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors border-t border-gray-100"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <a
@@ -121,20 +166,36 @@ function NavbarContent() {
                   <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                 ) : user ? (
                   <div className="flex flex-col space-y-2">
-                    <a
-                      href="/dashboard/profile"
-                      className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors px-4"
-                    >
-                      Dashboard
-                    </a>
-                    <span className="text-sm font-medium text-gray-700 px-4">{user.full_name}</span>
                     <button
-                      onClick={logout}
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                      className="flex items-center justify-between px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                     >
-                      <LogOut className="h-4 w-4" />
-                      <span>Logout</span>
+                      <span>{user.full_name}</span>
+                      <ChevronDown className={`h-4 w-4 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
+                    {isUserMenuOpen && (
+                      <>
+                        <a
+                          href="/dashboard/profile"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <span>Profile</span>
+                        </a>
+                        <a
+                          href="/dashboard/bookings"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <span>My Bookings</span>
+                        </a>
+                        <button
+                          onClick={logout}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          <span>Logout</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <a

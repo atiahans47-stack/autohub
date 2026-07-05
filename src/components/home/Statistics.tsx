@@ -25,14 +25,23 @@ export default function Statistics() {
         const carsData = await carsResponse.json();
         const carsCount = carsData.cars?.length || 0;
 
-        // Fetch bookings count (you may need to create this endpoint)
-        const bookingsResponse = await fetch('/api/bookings');
-        const bookingsData = await bookingsResponse.json();
-        const rentalsCount = bookingsData.bookings?.length || 0;
+        // Fetch completed transactions (bookings + sales)
+        const transactionsResponse = await fetch('/api/stats/completed-transactions');
+        let rentalsCount = 0;
+        if (transactionsResponse.ok) {
+          const transactionsData = await transactionsResponse.json();
+          rentalsCount = transactionsData.count || 0;
+        }
 
-        // For customers, we could fetch from users endpoint or use a placeholder
+        // Fetch satisfied customers (users with completed bookings)
+        const usersResponse = await fetch('/api/stats/users');
+        let customersCount = 0;
+        if (usersResponse.ok) {
+          const usersData = await usersResponse.json();
+          customersCount = usersData.count || 0;
+        }
+
         // For satisfaction, we could calculate from reviews or use a placeholder
-        const customersCount = carsCount * 20; // Placeholder estimate
         const satisfactionRate = 99; // Placeholder
 
         setStats([

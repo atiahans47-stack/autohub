@@ -13,7 +13,8 @@ import {
   MapPin,
   User,
   Clock,
-  Car
+  Car,
+  RotateCcw
 } from 'lucide-react';
 import Link from 'next/link';
 import { SearchInput, SelectInput } from "@/components/ui/FormFields";
@@ -122,6 +123,34 @@ export default function BookingsManagement() {
     } catch (error) {
       console.error('Error updating booking status:', error);
       alert('Failed to update booking status');
+    }
+  };
+
+  const handleReturnEarly = async (bookingId: string) => {
+    if (!confirm('Are you sure you want to mark this car as returned early? This will set the car back to available.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('adminSession');
+      const response = await fetch(`/api/bookings/${bookingId}/return-early`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setBookings(bookings.map(booking => 
+          booking.id === bookingId ? { ...booking, status: 'Completed' } : booking
+        ));
+        alert('Car returned early successfully');
+      } else {
+        alert('Failed to return car early');
+      }
+    } catch (error) {
+      console.error('Error returning car early:', error);
+      alert('Failed to return car early');
     }
   };
 
@@ -289,13 +318,22 @@ export default function BookingsManagement() {
                             </button>
                           )}
                           {booking.status === 'Active' && (
-                            <button
-                              onClick={() => handleStatusChange(booking.id, 'Completed')}
-                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                              title="Complete"
-                            >
-                              <Check className="h-4 w-4" />
-                            </button>
+                            <>
+                              <button
+                                onClick={() => handleStatusChange(booking.id, 'Completed')}
+                                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                title="Complete"
+                              >
+                                <Check className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => handleReturnEarly(booking.id)}
+                                className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                                title="Return Early"
+                              >
+                                <RotateCcw className="h-4 w-4" />
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>
@@ -421,6 +459,28 @@ export default function BookingsManagement() {
                     className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
                     Cancel Booking
+                  </button>
+                </>
+              )}
+              {selectedBooking.status === 'Active' && (
+                <>
+                  <button
+                    onClick={() => {
+                      handleStatusChange(selectedBooking.id, 'Completed');
+                      setIsDetailModalOpen(false);
+                    }}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Complete Booking
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleReturnEarly(selectedBooking.id);
+                      setIsDetailModalOpen(false);
+                    }}
+                    className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                  >
+                    Return Early
                   </button>
                 </>
               )}

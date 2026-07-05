@@ -98,14 +98,21 @@ export default function BookingModal({ car, isOpen, onClose, onConfirm }: Bookin
       }
       
       setIsLoading(true);
-      
+
       try {
+        // Refresh user session to get latest data
+        const sessionRes = await fetch('/api/auth/session');
+        const sessionData = await sessionRes.json();
+        const currentUser = sessionData.user || user;
+
+        console.log('Current user for payment:', currentUser);
+
         const bookingPayload = {
-          customer_id: user.id,
+          customer_id: currentUser.id,
           car_id: car.id,
-          customer_name: user.full_name || user.email?.split('@')[0] || 'Guest',
-          customer_email: user.email,
-          customer_phone: user.phone || '',
+          customer_name: currentUser.full_name || currentUser.email?.split('@')[0] || 'Guest',
+          customer_email: currentUser.email,
+          customer_phone: currentUser.phone || '',
           car_name: car.name,
           start_date: bookingData.pickupDate,
           end_date: bookingData.returnDate,
@@ -126,15 +133,25 @@ export default function BookingModal({ car, isOpen, onClose, onConfirm }: Bookin
 
         if (bookingError) throw bookingError;
 
+        // Update car availability to 'Booked'
+        const { error: carUpdateError } = await (supabase as any)
+          .from('cars')
+          .update({ availability: 'Booked' })
+          .eq('id', car.id);
+
+        if (carUpdateError) {
+          console.error('Error updating car availability:', carUpdateError);
+        }
+
         // Initiate Fapshi payment
         const paymentResponse = await fetch('/api/payments/initiate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             amount: bookingData.totalPrice,
-            email: user.email,
-            redirectUrl: `${window.location.origin}/rent-cars/${car.id}?booking=${booking.id}&success=true`,
-            userId: user.id,
+            email: currentUser.email,
+            redirectUrl: `${window.location.origin}/booking/confirmed?booking=${booking.id}&success=true`,
+            userId: currentUser.id,
             externalId: `booking-${booking.id}`,
             message: `Payment for car rental: ${car.name}`,
           }),
@@ -149,8 +166,8 @@ export default function BookingModal({ car, isOpen, onClose, onConfirm }: Bookin
         setPaymentLink(paymentData.paymentLink);
         setTransactionId(paymentData.transactionId);
 
-        // Redirect to Fapshi payment page
-        window.location.href = paymentData.paymentLink;
+        // Open Fapshi payment page in new tab
+        window.open(paymentData.paymentLink, '_blank');
       } catch (error) {
         console.error('Payment initiation error:', error);
         alert('Failed to initiate payment. Please try again.');

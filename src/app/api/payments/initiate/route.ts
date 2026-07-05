@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       name: name || '',
       email: email || '',
       message: message || 'Payment for car rental/sale',
-      redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/booking/confirmed`,
+      redirectUrl: redirectUrl || `${process.env.NEXT_PUBLIC_BASE_URL}/booking/confirmed`,
     });
 
     if (data.error) {

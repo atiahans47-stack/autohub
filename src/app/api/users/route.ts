@@ -43,6 +43,24 @@ export async function GET(request: NextRequest) {
       throw error;
     }
 
+    // Get booking counts for each user
+    const userIds = users?.map((u: any) => u.id) || [];
+    let bookingCounts: Record<string, number> = {};
+
+    if (userIds.length > 0) {
+      const { data: bookings } = await supabaseAdmin
+        .from('bookings')
+        .select('customer_id')
+        .in('customer_id', userIds);
+
+      if (bookings) {
+        bookingCounts = bookings.reduce((acc: Record<string, number>, booking: any) => {
+          acc[booking.customer_id] = (acc[booking.customer_id] || 0) + 1;
+          return acc;
+        }, {});
+      }
+    }
+
     // Transform data to match frontend expectations
     const transformedUsers = users?.map((profile: any) => ({
       _id: profile.id,
@@ -52,7 +70,7 @@ export async function GET(request: NextRequest) {
       phone: profile.phone || '',
       role: profile.role || 'customer',
       status: profile.is_verified ? 'Active' : 'Inactive',
-      totalBookings: 0, // Would need to aggregate from bookings table
+      totalBookings: bookingCounts[profile.id] || 0,
       totalPurchases: 0, // Would need to aggregate from sales table
       joinedDate: profile.created_at,
       lastActive: profile.last_login || profile.created_at,
