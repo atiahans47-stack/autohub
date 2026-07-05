@@ -38,7 +38,7 @@ export default function UserBookingsPage() {
         const { data, error } = await supabase
           .from('bookings')
           .select('*')
-          .eq('customer_id', user.id)
+          .eq('customer_id', user!.id)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
