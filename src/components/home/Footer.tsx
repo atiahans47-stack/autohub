@@ -116,8 +116,7 @@ export default function Footer() {
               transition={{ duration: 0.5 }}
               viewport={{ once: true }}
             >
-              <div className="flex items-center space-x-2 mb-4">
-                <Car className="h-8 w-8 text-blue-400" />
+              <div className="mb-4">
                 <span className="text-2xl font-bold">{footerContent?.companyInfo?.name || 'AUTOHub'}</span>
               </div>
 
