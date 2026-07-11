@@ -80,29 +80,27 @@ export default function BuyModal({ isOpen, onClose, car }: BuyModalProps) {
       }
       
       setIsLoading(true);
-      
+
       try {
-        // Get user session
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user?.email) {
+        // Use custom auth user instead of Supabase Auth
+        if (!user?.id || !user?.email) {
           throw new Error('User not authenticated');
         }
 
-        // Create sale first
-        const { data: { user: authUser } } = await supabase.auth.getUser();
+        // Get user data from profiles
         const { data: userData } = await (supabase as any)
           .from('profiles')
           .select('full_name, phone')
-          .eq('id', authUser?.id)
+          .eq('id', user.id)
           .single();
 
         const totalAmount = car.price + 50000; // Car price + processing fee
 
         const salePayload = {
-          customer_id: authUser?.id,
+          customer_id: user.id,
           car_id: car.id,
           customer_name: userData?.full_name || user.full_name || `${buyerInfo.firstName} ${buyerInfo.lastName}`,
-          customer_email: session.user.email,
+          customer_email: user.email,
           customer_phone: userData?.phone || user.phone || buyerInfo.phone,
           car_name: car.name,
           amount: totalAmount,
@@ -125,9 +123,9 @@ export default function BuyModal({ isOpen, onClose, car }: BuyModalProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             amount: totalAmount,
-            email: session.user.email,
+            email: user.email,
             redirectUrl: `${window.location.origin}/buy-cars/${car.id}?sale=${sale.id}&success=true`,
-            userId: authUser?.id || '',
+            userId: user.id,
             externalId: `sale-${sale.id}`,
             message: `Payment for car purchase: ${car.name}`,
           }),

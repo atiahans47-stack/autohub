@@ -44,6 +44,14 @@ export default function LiveChat() {
     getUser();
   }, []);
 
+  const handleChatOpen = () => {
+    if (!currentUser) {
+      router.push('/auth/login?redirect=/');
+      return;
+    }
+    setOpen(true);
+  };
+
   // Initialize chat room via API route (bypasses RLS using service role)
   useEffect(() => {
     if (!currentUser || !open) return;
@@ -261,7 +269,7 @@ export default function LiveChat() {
       )}
 
       <button
-        onClick={() => setOpen(!open)}
+        onClick={open ? () => setOpen(false) : handleChatOpen}
         className="w-14 h-14 bg-blue-600 rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-all hover:scale-110"
       >
         {open ? <X className="w-6 h-6 text-white" /> : <MessageCircle className="w-6 h-6 text-white" />}

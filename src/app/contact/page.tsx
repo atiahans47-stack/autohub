@@ -1,13 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { Phone, Mail, MapPin, Send, Clock } from 'lucide-react';
 import Navbar from '@/components/home/Navbar';
 import Footer from '@/components/home/Footer';
 import { TextInput, SelectInput, TextArea } from "@/components/ui/FormFields";
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ContactPage() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -17,6 +21,24 @@ export default function ContactPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/auth/login?redirect=/contact');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
