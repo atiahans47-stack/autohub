@@ -37,19 +37,14 @@ export default function CarManagement() {
 
   const loadCars = async () => {
     try {
-      const token = localStorage.getItem('adminSession');
-      const response = await fetch('/api/cars', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch('/api/cars');
       const data = await response.json();
-      
+
       if (!response.ok) {
         console.error('Error loading cars:', data.error);
         return;
       }
-      
+
       const carsData = (data.cars || []).map((car: { id: string; name: string; image: string; price: number; type: 'rental' | 'sale'; transmission: string; fuel_type: string; seats: number; availability: 'Available' | 'Booked' | 'Sold'; location: string }) => ({
         id: car.id,
         name: car.name,
@@ -62,7 +57,7 @@ export default function CarManagement() {
         availability: car.availability,
         location: car.location,
       }));
-      
+
       setCars(carsData);
     } catch (error) {
       console.error('Error loading cars:', error);
@@ -98,12 +93,8 @@ export default function CarManagement() {
   const confirmDelete = async () => {
     if (carToDelete) {
       try {
-        const token = localStorage.getItem('adminSession');
         const response = await fetch(`/api/cars/${carToDelete}`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
         });
 
         if (response.ok) {
